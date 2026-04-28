@@ -122,6 +122,8 @@ When the mapper has no owner data, fall back to `self.context.get("imob_cpf_cnpj
 
 **`data_captacao` is always automatic — do NOT set it in mappers.** `core/property_exporter.py` copies `PropertyRecord.data_registro` → `PropertyCaptivatorRecord.data_captacao` for every captivator before writing the CSV. Mappers only need to populate `pr.data_registro` correctly.
 
+**Imóvel SL → 2 captivadores automáticos.** `core/property_exporter.py` expande automaticamente cada `PropertyCaptivatorRecord` cujo imóvel tenha `tipo="SL"` e `departamento` ainda não seja `"S"` ou `"L"`, gerando dois registros: um com `departamento="S"` e outro com `departamento="L"`. Mappers não precisam fazer essa duplicação — basta emitir um único captivador por imóvel.
+
 ### Imobzi-specific
 
 - Paginated JSON files (`person-1.json`, `person-2.json`, …) are aggregated by `_collect(files, prefix)` in `mappers/imobzi.py`.
