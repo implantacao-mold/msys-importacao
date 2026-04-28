@@ -21,12 +21,16 @@ let themeBtn;
 let charReview, charScanning, charTable, charTbody, reviewFooter, saveMappings;
 // Subcat review panel
 let subcatSection, subcatTbody;
+// Prof / Orgao review panels
+let profSection, profTbody, orgaoSection, orgaoTbody;
 
 // Scan state
 const scan = {
   pending: false,       // scan in-flight
   canonicals: [],       // list of all canonical char names (for dropdowns)
   subcatOptions: [],    // list of {value, label} for subcategoria dropdowns
+  profOptions: [],      // list of canonical profession names
+  orgaoOptions: [],     // list of canonical issuing institution names
   hasIssues: false,     // true when review panel is shown
   resolved: false,      // true when all rows have a selection
 };
@@ -68,6 +72,10 @@ document.addEventListener('DOMContentLoaded', () => {
   saveMappings  = document.getElementById('save-mappings');
   subcatSection = document.getElementById('subcat-section');
   subcatTbody   = document.getElementById('subcat-tbody');
+  profSection   = document.getElementById('prof-section');
+  profTbody     = document.getElementById('prof-tbody');
+  orgaoSection  = document.getElementById('orgao-section');
+  orgaoTbody    = document.getElementById('orgao-tbody');
 
   applyTheme(localStorage.getItem('msys-theme') || 'dark');
   loadSystems();
@@ -257,7 +265,10 @@ async function triggerScan() {
       return;
     }
 
-    scan.canonicals = data.canonicals || [];
+    scan.canonicals   = data.canonicals    || [];
+    scan.subcatOptions = data.subcat_options || [];
+    scan.profOptions   = data.prof_options   || [];
+    scan.orgaoOptions  = data.orgao_options  || [];
 
     if (!data.has_issues) {
       hideCharReview();
@@ -267,9 +278,10 @@ async function triggerScan() {
     }
 
     scan.hasIssues = true;
-    scan.subcatOptions = data.subcat_options || [];
     renderCharReview(data);
     renderSubcatReview(data.subcats || []);
+    renderProfReview(data);
+    renderOrgaoReview(data);
   } catch {
     scan.pending = false;
     hideCharReview();
@@ -286,6 +298,10 @@ function hideCharReview() {
   charTbody.innerHTML = '';
   subcatSection.style.display = 'none';
   subcatTbody.innerHTML = '';
+  profSection.style.display = 'none';
+  profTbody.innerHTML = '';
+  orgaoSection.style.display = 'none';
+  orgaoTbody.innerHTML = '';
   scan.hasIssues = false;
 }
 
@@ -349,6 +365,72 @@ function renderSubcatReview(subcats) {
     subcatTbody.appendChild(tr);
   }
   subcatSection.style.display = '';
+  reviewFooter.style.display = '';
+  checkAllResolved();
+}
+
+function renderProfReview(data) {
+  profTbody.innerHTML = '';
+  const items = data.prof_uncertain || [];
+  if (!items.length) {
+    profSection.style.display = 'none';
+    return;
+  }
+  const optList = [
+    { value: '__keep__', label: 'Manter original' },
+    ...scan.profOptions.map(n => ({ value: n, label: n })),
+  ];
+  for (const row of items) {
+    const tr = document.createElement('tr');
+
+    const tdSrc = document.createElement('td');
+    tdSrc.textContent = row.source;
+    tr.appendChild(tdSrc);
+
+    const tdSug = document.createElement('td');
+    tdSug.innerHTML = `<span class="sug-name">${row.suggested}</span> <span class="sug-score">${row.score}%</span>`;
+    tr.appendChild(tdSug);
+
+    const tdSel = document.createElement('td');
+    tdSel.appendChild(createCombo(row.source, row.suggested || '__keep__', optList));
+    tr.appendChild(tdSel);
+
+    profTbody.appendChild(tr);
+  }
+  profSection.style.display = '';
+  reviewFooter.style.display = '';
+  checkAllResolved();
+}
+
+function renderOrgaoReview(data) {
+  orgaoTbody.innerHTML = '';
+  const items = data.orgao_uncertain || [];
+  if (!items.length) {
+    orgaoSection.style.display = 'none';
+    return;
+  }
+  const optList = [
+    { value: '__keep__', label: 'Manter original' },
+    ...scan.orgaoOptions.map(n => ({ value: n, label: n })),
+  ];
+  for (const row of items) {
+    const tr = document.createElement('tr');
+
+    const tdSrc = document.createElement('td');
+    tdSrc.textContent = row.source;
+    tr.appendChild(tdSrc);
+
+    const tdSug = document.createElement('td');
+    tdSug.innerHTML = `<span class="sug-name">${row.suggested}</span> <span class="sug-score">${row.score}%</span>`;
+    tr.appendChild(tdSug);
+
+    const tdSel = document.createElement('td');
+    tdSel.appendChild(createCombo(row.source, row.suggested || '__keep__', optList));
+    tr.appendChild(tdSel);
+
+    orgaoTbody.appendChild(tr);
+  }
+  orgaoSection.style.display = '';
   reviewFooter.style.display = '';
   checkAllResolved();
 }
@@ -482,6 +564,8 @@ function checkAllResolved() {
   const allCombos = [
     ...charTbody.querySelectorAll('.char-combo'),
     ...subcatTbody.querySelectorAll('.char-combo'),
+    ...profTbody.querySelectorAll('.char-combo'),
+    ...orgaoTbody.querySelectorAll('.char-combo'),
   ];
   scan.resolved = allCombos.every(c => c.dataset.value !== '');
   updateExportBtn();
@@ -500,6 +584,22 @@ function collectSubcatMappings() {
   return [...combos].map(c => ({
     source: c.dataset.source,
     id: c.dataset.value,
+  }));
+}
+
+function collectProfMappings() {
+  const combos = profTbody.querySelectorAll('.char-combo');
+  return [...combos].map(c => ({
+    source: c.dataset.source,
+    canonical: c.dataset.value === '__keep__' ? null : c.dataset.value,
+  }));
+}
+
+function collectOrgaoMappings() {
+  const combos = orgaoTbody.querySelectorAll('.char-combo');
+  return [...combos].map(c => ({
+    source: c.dataset.source,
+    canonical: c.dataset.value === '__keep__' ? null : c.dataset.value,
   }));
 }
 
@@ -534,6 +634,22 @@ async function startExport() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mappings: subcatMappings }),
+        });
+      }
+      const profMappings = collectProfMappings();
+      if (profMappings.length) {
+        await fetch('/api/mappings/profissoes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mappings: profMappings }),
+        });
+      }
+      const orgaoMappings = collectOrgaoMappings();
+      if (orgaoMappings.length) {
+        await fetch('/api/mappings/orgaos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mappings: orgaoMappings }),
         });
       }
     } catch { /* non-fatal */ }

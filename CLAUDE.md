@@ -69,6 +69,8 @@ All CSVs use **cp1252** encoding and **`;`** as delimiter. Input XLSX data must 
 
 **CEP lookup via MySQL:** `core/cep_lookup.py` queries `69.164.204.101:3306` (schema `address-postoffice`, table `address`, columns `num_postal_code`, `nam_city`, `sgl_uf`). Connection config is in `data/db_config.json`. A local JSON cache (`data/cep_cache.json`) avoids repeated queries. A singleton connection is reused across calls; on failure the function returns `None` without blocking the export.
 
+**Profissão and Órgão Expedidor normalization is automatic — mappers do NOT set these.** `core/exporter.py` calls `resolve_profession(p.profissao)` and `resolve_orgao(p.orgao_expedidor)` (from `core/profession_utils.py`) for every `PersonRecord`. Logic: exact/high-score match (≥ 0.92 for profissões, ≥ 0.85 for órgãos) → replaces with canonical name from `data/profissoes.json` / `data/orgaos_expedidores.json`; medium score → shown in Card 5 review for user decision; no match → keeps original. User decisions persist in `data/custom_profissoes.json` and `data/custom_orgaos.json`.
+
 **Sexo mapping:** Map the source gender field to `"F"` when the value is `"Feminino"`, `"female"`, or `"f"` (case-insensitive). Map to `"M"` for any other non-empty value. Leave empty if the source field is absent.
 
 **Monetary and area values — 2 decimal places:** Use a `_fmt_val(v)` helper (defined in each mapper that needs it) that converts numeric values to `f"{f:.2f}"` and returns `""` for zero, null, or unparseable input. Apply to: `valor_venda`, `valor_locacao`, `valor_condominio`, `area_util`, `area_total`, `area_construida`, `iptu` values, and all similar numeric fields.

@@ -7,6 +7,7 @@ import unicodedata
 
 from core.base_mapper import ExtractionResult
 from core.cep_lookup import fix_record_cep
+from core.profession_utils import resolve_profession, resolve_orgao
 from core.schema import ENCODING, SEPARATOR, PERSON_COLUMNS, EMAIL_COLUMNS, PHONE_COLUMNS
 from core.property_exporter import export_properties
 
@@ -111,9 +112,13 @@ def export(result: ExtractionResult, output_dir: str) -> None:
     emails  = sorted(result.emails,  key=lambda e: _code_key(e.codigo_pessoa))
     phones  = sorted(result.phones,  key=lambda p: _code_key(p.codigo_pessoa))
 
-    # Normaliza CEP de todas as pessoas (válido para todos os mappers)
+    # Normaliza CEP, profissão e órgão expedidor (válido para todos os mappers)
     for p in persons:
         fix_record_cep(p)
+        if p.profissao:
+            p.profissao = resolve_profession(p.profissao)
+        if p.orgao_expedidor:
+            p.orgao_expedidor = resolve_orgao(p.orgao_expedidor)
 
     write_csv(
         os.path.join(person_dir, "PERSON.csv"),

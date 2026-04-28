@@ -18,6 +18,11 @@ from core import exporter
 from core.caracteristicas import CARACTERISTICAS_COMBOBOX
 from core.characteristics_utils import scan_feature, save_custom_mapping, get_custom_mappings
 from core.subcategorias import get_custom_subcat, save_custom_subcat, get_subcategoria_options
+from core.profession_utils import (
+    scan_profession, scan_orgao,
+    save_profession_mapping, save_orgao_mapping,
+    get_profession_options, get_orgao_options,
+)
 from mappers import build_engine
 
 
@@ -154,6 +159,24 @@ def create_app() -> Flask:
 
             raw_names: set[str] = mapper.scan_characteristics(data)
             raw_subcats: set[str] = mapper.scan_subcategories(data)
+
+            # Extrai profissões e órgãos expedidores a partir do resultado completo
+            try:
+                extraction = (
+                    mapper.extract_zip(data) if is_zip else mapper.extract(data)
+                )
+                raw_profissoes: set[str] = {
+                    p.profissao for p in extraction.persons
+                    if p.profissao and p.profissao.strip()
+                }
+                raw_orgaos: set[str] = {
+                    p.orgao_expedidor for p in extraction.persons
+                    if p.orgao_expedidor and p.orgao_expedidor.strip()
+                }
+            except Exception:
+                raw_profissoes = set()
+                raw_orgaos = set()
+
         except Exception as exc:
             return jsonify({"error": str(exc)}), 500
         finally:
@@ -180,13 +203,41 @@ def create_app() -> Flask:
             if get_custom_subcat(tipo, subtipo) is None:
                 subcats.append({"source": src})
 
+        # Profissões com correspondência incerta
+        prof_uncertain: list[dict] = []
+        for name in sorted(raw_profissoes):
+            info = scan_profession(name)
+            if info["status"] == "uncertain":
+                pct = round((info["score"] or 0) * 100)
+                prof_uncertain.append({
+                    "source": name,
+                    "suggested": info["canonical"],
+                    "score": pct,
+                })
+
+        # Órgãos expedidores com correspondência incerta
+        orgao_uncertain: list[dict] = []
+        for name in sorted(raw_orgaos):
+            info = scan_orgao(name)
+            if info["status"] == "uncertain":
+                pct = round((info["score"] or 0) * 100)
+                orgao_uncertain.append({
+                    "source": name,
+                    "suggested": info["canonical"],
+                    "score": pct,
+                })
+
         canonicals = sorted(CARACTERISTICAS_COMBOBOX.values())
         return jsonify({
             "uncertain": uncertain,
             "unmatched": unmatched,
             "subcats": subcats,
             "subcat_options": get_subcategoria_options(),
-            "has_issues": bool(uncertain or unmatched or subcats),
+            "prof_uncertain": prof_uncertain,
+            "prof_options": get_profession_options(),
+            "orgao_uncertain": orgao_uncertain,
+            "orgao_options": get_orgao_options(),
+            "has_issues": bool(uncertain or unmatched or subcats or prof_uncertain or orgao_uncertain),
             "canonicals": canonicals,
         })
 
@@ -220,6 +271,26 @@ def create_app() -> Flask:
             if source:
                 tipo, _, subtipo = source.partition("|")
                 save_custom_subcat(tipo, subtipo, id_str)
+        return jsonify({"ok": True})
+
+    @app.post("/api/mappings/profissoes")
+    def save_prof_mappings():
+        body = request.get_json(force=True, silent=True) or {}
+        for item in body.get("mappings", []):
+            source = item.get("source")
+            canonical = item.get("canonical") or None   # None = manter original
+            if source:
+                save_profession_mapping(source, canonical)
+        return jsonify({"ok": True})
+
+    @app.post("/api/mappings/orgaos")
+    def save_orgao_mappings():
+        body = request.get_json(force=True, silent=True) or {}
+        for item in body.get("mappings", []):
+            source = item.get("source")
+            canonical = item.get("canonical") or None
+            if source:
+                save_orgao_mapping(source, canonical)
         return jsonify({"ok": True})
 
     @app.get("/api/open-folder")

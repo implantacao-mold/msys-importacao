@@ -1,0 +1,82 @@
+[
+	{
+		"idt_issuing_institution" : 13,
+		"nam_issuing_institution" : "SSP/AL"
+	},
+	{
+		"idt_issuing_institution" : 2,
+		"nam_issuing_institution" : "SSP/AM"
+	},
+	{
+		"idt_issuing_institution" : 16,
+		"nam_issuing_institution" : "SSP/BA"
+	},
+	{
+		"idt_issuing_institution" : 15,
+		"nam_issuing_institution" : "SSP/CE"
+	},
+	{
+		"idt_issuing_institution" : 5,
+		"nam_issuing_institution" : "SSP/DF"
+	},
+	{
+		"idt_issuing_institution" : 9,
+		"nam_issuing_institution" : "SSP/ES"
+	},
+	{
+		"idt_issuing_institution" : 17,
+		"nam_issuing_institution" : "SSP/GO"
+	},
+	{
+		"idt_issuing_institution" : 6,
+		"nam_issuing_institution" : "SSP/MA"
+	},
+	{
+		"idt_issuing_institution" : 18,
+		"nam_issuing_institution" : "SSP/MG"
+	},
+	{
+		"idt_issuing_institution" : 12,
+		"nam_issuing_institution" : "SSP/MS"
+	},
+	{
+		"idt_issuing_institution" : 4,
+		"nam_issuing_institution" : "SSP/MT"
+	},
+	{
+		"idt_issuing_institution" : 8,
+		"nam_issuing_institution" : "SSP/PA"
+	},
+	{
+		"idt_issuing_institution" : 19,
+		"nam_issuing_institution" : "SSP/PE"
+	},
+	{
+		"idt_issuing_institution" : 3,
+		"nam_issuing_institution" : "SSP/PR"
+	},
+	{
+		"idt_issuing_institution" : 1,
+		"nam_issuing_institution" : "SSP/RJ"
+	},
+	{
+		"idt_issuing_institution" : 10,
+		"nam_issuing_institution" : "SSP/RO"
+	},
+	{
+		"idt_issuing_institution" : 14,
+		"nam_issuing_institution" : "SSP/RS"
+	},
+	{
+		"idt_issuing_institution" : 11,
+		"nam_issuing_institution" : "SSP/SC"
+	},
+	{
+		"idt_issuing_institution" : 7,
+		"nam_issuing_institution" : "SSP/SE"
+	},
+	{
+		"idt_issuing_institution" : 20,
+		"nam_issuing_institution" : "SSP/SP"
+	}
+]
