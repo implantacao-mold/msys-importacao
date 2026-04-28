@@ -1,0 +1,13 @@
+# Normaliza quebras de linha: LF no repositório, checkout automático conforme o SO
+* text=auto
+
+# Arquivos que devem sempre usar CRLF no Windows
+*.bat text eol=crlf
+
+# Binários
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.svg binary
+*.ico binary
+*.zip binary

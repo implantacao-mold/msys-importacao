@@ -1,0 +1,7 @@
+{
+  "host": "69.164.204.101",
+  "port": 3306,
+  "database": "address-postoffice",
+  "user": "SEU_USUARIO",
+  "password": "SUA_SENHA"
+}

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MSYS Importação de Dados</title>
+  <!-- Apply saved theme before first paint — prevents flash -->
+  <script>
+    (function () {
+      var t = localStorage.getItem('msys-theme');
+      if (t) document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="header-brand">
+      <img src="/static/msys_logo.png" alt="MSYS IMOB" class="brand-logo" aria-hidden="true">
+      <span class="brand-sub">Importação de Dados</span>
+    </div>
+    <button class="theme-btn" id="theme-btn" title="Alternar tema" aria-label="Alternar tema claro/escuro">☀</button>
+  </header>
+
+  <!-- ── Main ── -->
+  <main>
+
+    <!-- ── Card 1: Arquivo ── -->
+    <div class="card">
+      <div class="card-label">
+        <span class="step-num" aria-hidden="true">1</span>
+        Arquivo de origem
+      </div>
+
+      <div class="drop-zone" id="drop-zone" role="button" tabindex="0"
+           aria-label="Área para selecionar ou arrastar arquivo">
+        <input type="file" id="file-input"
+               accept=".xml,.xlsx,.xls,.zip,.sql,.json"
+               aria-label="Selecionar arquivo">
+        <span class="drop-icon" aria-hidden="true">📂</span>
+        <div class="drop-title">Arraste o arquivo aqui ou clique para selecionar</div>
+        <div class="drop-sub">Formatos suportados</div>
+        <div class="drop-formats">
+          <span class="fmt-tag">XML</span>
+          <span class="fmt-tag">XLSX</span>
+          <span class="fmt-tag">ZIP</span>
+          <span class="fmt-tag">SQL</span>
+          <span class="fmt-tag">JSON</span>
+        </div>
+      </div>
+
+      <!-- Selected file bar -->
+      <div class="file-chosen" id="file-chosen" role="status">
+        <span class="file-icon" aria-hidden="true">📄</span>
+        <span class="file-name" id="file-name"></span>
+        <span class="file-size" id="file-size"></span>
+        <button class="file-clear" id="file-clear"
+                title="Remover arquivo" aria-label="Remover arquivo selecionado">✕</button>
+      </div>
+
+      <!-- ZIP password (conditional) -->
+      <div class="password-group" id="password-group">
+        <div class="field-label">🔒 Senha do ZIP <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></div>
+        <input type="password" id="password-input"
+               placeholder="Deixe em branco se não houver senha"
+               autocomplete="new-password">
+      </div>
+    </div>
+
+    <!-- ── Card 2: Sistema ── -->
+    <div class="card">
+      <div class="card-label">
+        <span class="step-num" aria-hidden="true">2</span>
+        Sistema de origem
+      </div>
+      <select id="system-select" aria-label="Selecionar sistema de origem">
+        <option value="" disabled selected>Selecione o sistema…</option>
+      </select>
+    </div>
+
+    <!-- ── Card 3: Imobiliária ── -->
+    <div class="card">
+      <div class="card-label">
+        <span class="step-num" aria-hidden="true">3</span>
+        Dados da imobiliária
+      </div>
+      <div class="field-label">CPF/CNPJ <span style="font-weight:400;color:var(--text-muted)">(usado como fallback quando o imóvel não tem proprietário/captador)</span></div>
+      <input type="text" id="imob-cpf-cnpj" value="19134830000130" placeholder="Somente números">
+      <div class="field-label" style="margin-top:10px">Nome da imobiliária</div>
+      <input type="text" id="imob-nome" value="Mold Systems" placeholder="Nome da imobiliária">
+    </div>
+
+    <!-- ── Card 4: Saída ── -->
+    <div class="card">
+      <div class="card-label">
+        <span class="step-num" aria-hidden="true">4</span>
+        Destino dos arquivos
+      </div>
+
+      <div class="radio-group" role="radiogroup" aria-label="Modo de saída">
+        <div class="radio-opt">
+          <input type="radio" name="output_mode" id="mode-download" value="download" checked>
+          <label for="mode-download">
+            <span class="radio-icon" aria-hidden="true">⬇</span>
+            Baixar como ZIP
+          </label>
+        </div>
+        <div class="radio-opt">
+          <input type="radio" name="output_mode" id="mode-path" value="path">
+          <label for="mode-path">
+            <span class="radio-icon" aria-hidden="true">📁</span>
+            Salvar em pasta local
+          </label>
+        </div>
+      </div>
+
+      <div class="path-group" id="path-group">
+        <div class="field-label">📍 Caminho da pasta de saída</div>
+        <div class="path-input-row">
+          <input type="text" id="output-path"
+                 placeholder="Ex: C:\Exportações\Cliente"
+                 aria-label="Caminho da pasta de saída">
+          <button type="button" id="browse-btn" title="Selecionar pasta">
+            📂 Procurar
+          </button>
+        </div>
+        <div class="path-hint" id="path-hint">Informe o caminho completo ou clique em <strong>Procurar</strong> para selecionar. A pasta será criada se não existir.</div>
+      </div>
+    </div>
+
+    <!-- ── Card 5: Revisão de mapeamentos ── -->
+    <div class="card" id="char-review" style="display:none">
+      <div class="card-label">
+        <span class="step-num" aria-hidden="true">5</span>
+        Revisão de mapeamentos
+      </div>
+
+      <!-- Seção: Características -->
+      <div class="review-section" id="char-section-wrap">
+        <div class="review-section-header">
+          <span class="review-section-icon">🏷️</span>
+          <div>
+            <div class="review-section-title">Características</div>
+            <div class="review-section-sub">Vincule ou ignore cada característica não reconhecida antes de exportar.</div>
+          </div>
+        </div>
+
+        <div id="char-scanning" style="display:none">
+          <div class="review-scanning">Analisando características…</div>
+        </div>
+
+        <table class="char-table" id="char-table" style="display:none">
+          <thead>
+            <tr>
+              <th>Característica original</th>
+              <th>Sugestão</th>
+              <th>Mapeamento</th>
+            </tr>
+          </thead>
+          <tbody id="char-tbody"></tbody>
+        </table>
+      </div>
+
+
+      <!-- Seção: Subcategorias -->
+      <div id="subcat-section" style="display:none">
+        <div class="review-section-divider"></div>
+        <div class="review-section">
+          <div class="review-section-header">
+            <span class="review-section-icon">🏠</span>
+            <div>
+              <div class="review-section-title">Subcategorias</div>
+              <div class="review-section-sub">Selecione a subcategoria Msys correspondente para cada tipo não reconhecido.</div>
+            </div>
+          </div>
+          <table class="char-table" id="subcat-table">
+            <thead>
+              <tr>
+                <th>Tipo + Subtipo original</th>
+                <th>Subcategoria Msys</th>
+              </tr>
+            </thead>
+            <tbody id="subcat-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="review-footer" id="review-footer" style="display:none">
+        <label class="save-label">
+          <input type="checkbox" id="save-mappings" checked>
+          Salvar decisões para futuras exportações
+        </label>
+      </div>
+    </div>
+
+    <!-- ── Export button ── -->
+    <button id="export-btn" aria-label="Iniciar exportação">
+      <span aria-hidden="true">⚡</span>
+      EXPORTAR
+    </button>
+
+    <!-- ── Card 4: Status ── -->
+    <div class="card" id="status-card" aria-live="polite" aria-atomic="true">
+
+      <!-- Running -->
+      <div class="status-running" id="status-running" style="display:none">
+        <div class="spinner-wrap" aria-hidden="true">
+          <div class="spinner"></div>
+          <div class="spinner-inner"></div>
+        </div>
+        <div class="running-text">
+          <strong>Exportando dados…</strong>
+          Processando registros, aguarde um momento.
+        </div>
+      </div>
+
+      <!-- Done -->
+      <div class="status-done" id="status-done">
+        <div class="success-header">
+          <div class="success-icon" aria-hidden="true">✓</div>
+          <div>
+            <div class="success-title">Exportação concluída!</div>
+            <div class="success-msg" id="success-msg"></div>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-chip">
+            <span class="stat-num" id="stat-persons">0</span>
+            <span class="stat-lbl">Pessoas</span>
+          </div>
+          <div class="stat-chip">
+            <span class="stat-num" id="stat-props">0</span>
+            <span class="stat-lbl">Imóveis</span>
+          </div>
+        </div>
+
+        <div id="download-area"></div>
+      </div>
+
+      <!-- Error -->
+      <div class="status-error" id="status-error">
+        <div class="error-banner">
+          <span class="error-banner-icon" aria-hidden="true">⚠</span>
+          <div>
+            <div class="error-title">Erro durante a exportação</div>
+            <div class="error-sub">Verifique se o arquivo e o sistema estão corretos.</div>
+          </div>
+        </div>
+        <pre class="error-trace" id="error-trace" role="alert"></pre>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Testes
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ambiente virtual
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Dados sensíveis e caches de runtime
+data/db_config.json
+data/cep_cache.json
+data/bank_codes_cache.json
+
+# Arquivos temporários gerados pela ferramenta
+*.zip
+debug_*.py
+
+# Claude Code (configurações locais da máquina)
+.mcp.json
