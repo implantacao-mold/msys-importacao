@@ -1,5 +1,6 @@
 from __future__ import annotations
 import csv
+import dataclasses
 import html
 import os
 import re
@@ -56,6 +57,18 @@ def export_properties(result: PropertyExtractionResult, output_dir: str) -> None
     # Normaliza CEP de todos os imóveis (válido para todos os mappers)
     for pr in result.properties:
         fix_record_cep(pr)
+
+    # Imóvel SL → expande captivadores em 2 registros (um "S" e um "L")
+    # Captivadores que já estejam com departamento "S" ou "L" são mantidos como estão.
+    _tipo_imovel = {pr.codigo: pr.tipo for pr in result.properties}
+    expanded_captivators: list = []
+    for c in result.captivators:
+        if _tipo_imovel.get(c.codigo_imovel) == "SL" and c.departamento not in ("S", "L"):
+            expanded_captivators.append(dataclasses.replace(c, departamento="S"))
+            expanded_captivators.append(dataclasses.replace(c, departamento="L"))
+        else:
+            expanded_captivators.append(c)
+    result.captivators = expanded_captivators
 
     # data_captacao sempre igual a data_registro do imóvel correspondente
     _data_registro = {pr.codigo: pr.data_registro for pr in result.properties}
