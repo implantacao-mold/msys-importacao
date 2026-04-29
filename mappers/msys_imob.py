@@ -3,7 +3,7 @@ import re
 from typing import Any
 
 from core.base_mapper import BaseMapper, ExtractionResult, PersonRecord, EmailRecord, PhoneRecord
-from core.phone_utils import processar_telefone
+from core.phone_utils import processar_telefone, is_valid_email
 
 
 def _parse_inserts(sql: str, table: str) -> list[list[str]]:
@@ -259,7 +259,7 @@ class MsysImobMapper(BaseMapper):
                             ddi=parsed["ddi"], ddd=parsed["ddd"],
                             telefone=parsed["numero"], tipo_telefone=parsed["tipo"],
                         ))
-                elif contact_type in ("email",):
+                elif contact_type in ("email",) and is_valid_email(value):
                     result.emails.append(EmailRecord(
                         codigo_pessoa=pid, tipo_pessoa=tipo,
                         email=value, tipo_email="",

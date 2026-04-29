@@ -3,7 +3,7 @@ import re
 from typing import Any
 
 from core.base_mapper import BaseMapper, ExtractionResult, PersonRecord, EmailRecord, PhoneRecord
-from core.phone_utils import processar_telefone
+from core.phone_utils import processar_telefone, is_valid_email
 
 
 def _v(row: dict, *keys: str) -> str:
@@ -28,7 +28,7 @@ def _parse_phones(telefones_text: str) -> list[str]:
 
 
 def _parse_emails(emails_text: str) -> list[str]:
-    return [e.strip() for e in re.split(r"[,;\s]+", emails_text) if "@" in e.strip()]
+    return [e.strip() for e in re.split(r"[,;\s]+", emails_text) if is_valid_email(e.strip())]
 
 
 class KenloMapper(BaseMapper):
@@ -196,7 +196,7 @@ class KenloMapper(BaseMapper):
                 ))
 
         email = _v(row, "e-mail", "email")
-        if email:
+        if is_valid_email(email):
             result.emails.append(EmailRecord(
                 codigo_pessoa=codigo, tipo_pessoa="EM",
                 email=email, tipo_email="",

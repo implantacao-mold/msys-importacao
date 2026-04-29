@@ -6,7 +6,7 @@ import re
 from typing import Any
 
 from core.base_mapper import BaseMapper, ExtractionResult, PersonRecord, EmailRecord, PhoneRecord
-from core.phone_utils import processar_telefone
+from core.phone_utils import processar_telefone, is_valid_email
 from core.property_records import (
     PropertyExtractionResult,
     PropertyRecord,
@@ -632,7 +632,7 @@ class ImobziMapper(BaseMapper):
                     ))
 
             email = _s(user.get("email"))
-            if email:
+            if is_valid_email(email):
                 result.emails.append(EmailRecord(
                     codigo_pessoa=uid, tipo_pessoa="EM",
                     email=email, tipo_email="",
@@ -730,7 +730,7 @@ class ImobziMapper(BaseMapper):
                 email = _s(em_obj.get("address") or em_obj.get("email"))
             else:
                 email = _s(em_obj)
-            if email:
+            if is_valid_email(email):
                 result.emails.append(EmailRecord(
                     codigo_pessoa=codigo, tipo_pessoa=tipo,
                     email=email, tipo_email="",
@@ -789,7 +789,7 @@ class ImobziMapper(BaseMapper):
         emails = _parse_flat_list(org.get("email") or org.get("emails"))
         for em_obj in emails:
             email = _s(em_obj.get("address") if isinstance(em_obj, dict) else em_obj)
-            if email:
+            if is_valid_email(email):
                 result.emails.append(EmailRecord(
                     codigo_pessoa=codigo, tipo_pessoa=tipo,
                     email=email, tipo_email="",

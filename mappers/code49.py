@@ -6,7 +6,7 @@ from datetime import date
 
 from core.base_mapper import BaseMapper, ExtractionResult, PersonRecord, EmailRecord, PhoneRecord
 from core.characteristics_utils import build_sim_nao, map_characteristics_to_fields
-from core.phone_utils import processar_telefone
+from core.phone_utils import processar_telefone, is_valid_email
 from core.property_records import (
     PropertyRecord, PropertyOwnerRecord, PropertyOwnerFavoredRecord,
     PropertyCaptivatorRecord, PropertyIptuRecord,
@@ -307,25 +307,28 @@ class Code49Mapper(BaseMapper):
             p.observacao      = _txt(cli, "OBSERVACAO") or _txt(cli, "OBS")
             result.persons.append(p)
 
-            for raw in fones_by_cli.get(cli_id, []):
-                parsed = processar_telefone(raw)
-                if parsed:
-                    result.phones.append(PhoneRecord(
-                        codigo_pessoa=cli_id,
-                        tipo_pessoa=tipo,
-                        ddi=parsed["ddi"],
-                        ddd=parsed["ddd"],
-                        telefone=parsed["numero"],
-                        tipo_telefone=parsed["tipo"],
-                    ))
+            if tipo == "OW":
+                for raw in fones_by_cli.get(cli_id, []):
+                    cleaned = raw.replace("+", "").replace("55 ", "").replace(" ", "").strip()
+                    parsed = processar_telefone(cleaned)
+                    if parsed:
+                        result.phones.append(PhoneRecord(
+                            codigo_pessoa=cli_id,
+                            tipo_pessoa=tipo,
+                            ddi=parsed["ddi"],
+                            ddd=parsed["ddd"],
+                            telefone=parsed["numero"],
+                            tipo_telefone=parsed["tipo"],
+                        ))
 
-            for email in emails_by_cli.get(cli_id, []):
-                result.emails.append(EmailRecord(
-                    codigo_pessoa=cli_id,
-                    tipo_pessoa=tipo,
-                    email=email,
-                    tipo_email="",
-                ))
+                for email in emails_by_cli.get(cli_id, []):
+                    if is_valid_email(email):
+                        result.emails.append(EmailRecord(
+                            codigo_pessoa=cli_id,
+                            tipo_pessoa=tipo,
+                            email=email,
+                            tipo_email="",
+                        ))
 
         result.property_result = self._extract_properties(
             root, cidades, bairros, categorias, tipos_internos,
@@ -653,30 +656,31 @@ class Code49Mapper(BaseMapper):
 
             # ── Proprietário ──────────────────────────────────────────────────
             prop_cli_id = _txt(im, "PROPRIETARIO")
-            ow_cpf, ow_cnpj, ow_nome = clientes_info.get(prop_cli_id, ("", "", ""))
-            if not ow_cpf and not ow_cnpj:
-                ow_cpf  = imob_cpf
-                ow_cnpj = imob_cnpj
-                ow_nome = imob_nome
+            _, _, ow_nome = clientes_info.get(prop_cli_id, ("", "", imob_nome))
+            # Se há ID de proprietário: ID vai em codigo_pessoa, CPF fica vazio.
+            # Se não há (zero ou nulo): CNPJ da imobiliária vai no CPF, ID fica vazio.
+            has_owner = bool(prop_cli_id and prop_cli_id != "0")
+            owner_cpf = "" if has_owner else imob_doc
+            owner_id  = prop_cli_id if has_owner else ""
 
             prop_result.owners.append(PropertyOwnerRecord(
                 codigo_imovel=imovel_id,
-                cpf=ow_cpf,
-                cnpj=ow_cnpj,
-                codigo_pessoa=prop_cli_id or "",
+                cpf=owner_cpf,
+                cnpj="",
+                codigo_pessoa=owner_id,
                 percentual="100",
             ))
 
             prop_result.owners_favored.append(PropertyOwnerFavoredRecord(
                 codigo_imovel=imovel_id,
-                cpf=ow_cpf,
-                cnpj=ow_cnpj,
-                codigo_pessoa=prop_cli_id or "",
+                cpf=owner_cpf,
+                cnpj="",
+                codigo_pessoa=owner_id,
                 tipo_pagamento="M",
                 percentual="100",
-                cpf_favorecido=ow_cpf,
-                cnpj_favorecido=ow_cnpj,
-                id_favorecido=prop_cli_id or "",
+                cpf_favorecido=owner_cpf,
+                cnpj_favorecido="",
+                id_favorecido=owner_id,
                 favorecido=ow_nome,
                 banco="",
                 agencia="",

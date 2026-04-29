@@ -1,5 +1,12 @@
 import re
 
+_EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
+
+def is_valid_email(email: str) -> bool:
+    """Verifica se o email tem formato válido (local@dominio.tld, sem espaços)."""
+    return bool(email and _EMAIL_RE.match(email.strip()))
+
 
 def processar_telefone(raw: str, ddd_hint: str = "") -> dict | None:
     """Valida e normaliza um número de telefone.

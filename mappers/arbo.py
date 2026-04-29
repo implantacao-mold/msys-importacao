@@ -10,7 +10,7 @@ from core.base_mapper import BaseMapper, ExtractionResult, PersonRecord, EmailRe
 from core.cep_lookup import fill_city_state, is_valid_cep, lookup_cep_by_city
 from core.characteristics_utils import build_sim_nao, map_characteristics_to_fields
 from core.subcategorias import get_custom_subcat
-from core.phone_utils import processar_telefone
+from core.phone_utils import processar_telefone, is_valid_email
 from core.property_records import (
     PropertyRecord, PropertyOwnerRecord, PropertyOwnerFavoredRecord,
     PropertyCaptivatorRecord, PropertyIptuRecord,
@@ -330,7 +330,7 @@ class ArboMapper(BaseMapper):
                             ))
 
                         email = _txt(prop, "Email")
-                        if email and "@temp-email.com.br" not in email:
+                        if is_valid_email(email) and "@temp-email.com.br" not in email:
                             result.emails.append(EmailRecord(
                                 codigo_pessoa=codigo,
                                 tipo_pessoa="OW",

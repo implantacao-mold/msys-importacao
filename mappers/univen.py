@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 from typing import Any
 
 from core.base_mapper import BaseMapper, ExtractionResult, PersonRecord, EmailRecord, PhoneRecord
-from core.phone_utils import processar_telefone
+from core.phone_utils import processar_telefone, is_valid_email
 
 
 def _txt(el: ET.Element | None, tag: str) -> str:
@@ -111,7 +111,7 @@ class UnivenMapper(BaseMapper):
         self._add_phones(el, codigo, tipo, result)
 
         email = _txt(el, "email")
-        if email:
+        if is_valid_email(email):
             result.emails.append(EmailRecord(
                 codigo_pessoa=codigo,
                 tipo_pessoa=tipo,

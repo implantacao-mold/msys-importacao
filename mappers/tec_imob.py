@@ -8,7 +8,7 @@ from typing import Any
 from core.base_mapper import BaseMapper, ExtractionResult, PersonRecord, EmailRecord, PhoneRecord
 from core.cep_lookup import fill_city_state, is_valid_cep, lookup_cep_by_city
 from core.characteristics_utils import build_sim_nao, map_characteristics_to_fields
-from core.phone_utils import processar_telefone
+from core.phone_utils import processar_telefone, is_valid_email
 from core.property_records import (
     PropertyRecord, PropertyOwnerRecord, PropertyOwnerFavoredRecord,
     PropertyCaptivatorRecord, PropertyIptuRecord,
@@ -304,7 +304,7 @@ class TecImobMapper(BaseMapper):
                 ))
 
             email = _v(row, "E-mail", "Email", "email")
-            if email:
+            if is_valid_email(email):
                 result.emails.append(EmailRecord(
                     codigo_pessoa=codigo,
                     tipo_pessoa=tipo,

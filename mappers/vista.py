@@ -3,7 +3,7 @@ import re
 from typing import Any
 
 from core.base_mapper import BaseMapper, ExtractionResult, PersonRecord, EmailRecord, PhoneRecord
-from core.phone_utils import processar_telefone
+from core.phone_utils import processar_telefone, is_valid_email
 
 
 def parse_sql(sql: str, table: str) -> list[dict]:
@@ -193,7 +193,7 @@ class VistaMapper(BaseMapper):
                 ))
 
         email = g("EMAIL_R")
-        if email:
+        if is_valid_email(email):
             result.emails.append(EmailRecord(
                 codigo_pessoa=codigo, tipo_pessoa=tipo,
                 email=email, tipo_email="",
@@ -250,7 +250,7 @@ class VistaMapper(BaseMapper):
                 ))
 
         email = g("EMAIL")
-        if email:
+        if is_valid_email(email):
             result.emails.append(EmailRecord(
                 codigo_pessoa=codigo, tipo_pessoa="EM",
                 email=email, tipo_email="",
