@@ -343,8 +343,6 @@ class TecImobMapper(BaseMapper):
     ) -> PropertyExtractionResult:
         prop_result = PropertyExtractionResult()
         imob_doc = re.sub(r"\D", "", self.context.get("imob_cpf_cnpj", ""))
-        imob_cpf = imob_doc if len(imob_doc) == 11 else ""
-        imob_cnpj = imob_doc if len(imob_doc) == 14 else ""
 
         for row in rows:
             # Skip deleted / inactive properties
@@ -580,12 +578,12 @@ class TecImobMapper(BaseMapper):
 
             if person:
                 ow_cpf    = person.cpf
-                ow_cnpj   = person.cnpj
+                ow_cnpj   = "" if person.cpf else person.cnpj
                 ow_codigo = person.codigo
                 ow_nome   = person.nome
             else:
-                ow_cpf    = imob_cpf
-                ow_cnpj   = imob_cnpj
+                ow_cpf    = ""
+                ow_cnpj   = imob_doc
                 ow_codigo = ""
                 ow_nome   = prop_nome
 

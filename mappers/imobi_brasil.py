@@ -402,12 +402,18 @@ def _extract_property(
 
     prop_result.properties.append(pr)
 
-    ow_cpf  = imob_cpf_cnpj if not owner_codigo else ""
+    imob_doc = re.sub(r"\D", "", imob_cpf_cnpj)
+    if owner_codigo:
+        ow_cpf  = ""
+        ow_cnpj = ""
+    else:
+        ow_cpf  = ""
+        ow_cnpj = imob_doc
     ow_nome = imob_nome if not owner_codigo else owner_nome
 
     prop_result.captivators.append(PropertyCaptivatorRecord(
         codigo_imovel=codigo,
-        cpf_cnpj=imob_cpf_cnpj,
+        cpf_cnpj=imob_doc,
         departamento=tipo_prop,
         data_captacao=datetime.date.today().strftime("%d/%m/%Y"),
     ))
@@ -415,6 +421,7 @@ def _extract_property(
     prop_result.owners.append(PropertyOwnerRecord(
         codigo_imovel=codigo,
         cpf=ow_cpf,
+        cnpj=ow_cnpj,
         codigo_pessoa=owner_codigo,
         percentual="100",
     ))
@@ -422,10 +429,12 @@ def _extract_property(
     prop_result.owners_favored.append(PropertyOwnerFavoredRecord(
         codigo_imovel=codigo,
         cpf=ow_cpf,
+        cnpj=ow_cnpj,
         codigo_pessoa=owner_codigo,
         tipo_pagamento="M",
         percentual="100",
         cpf_favorecido=ow_cpf,
+        cnpj_favorecido=ow_cnpj,
         id_favorecido=owner_codigo,
         favorecido=ow_nome,
     ))

@@ -362,8 +362,6 @@ class ArboMapper(BaseMapper):
     ) -> PropertyExtractionResult:
         prop_result = PropertyExtractionResult()
         imob_doc = re.sub(r"\D", "", self.context.get("imob_cpf_cnpj", ""))
-        imob_cpf  = imob_doc if len(imob_doc) == 11 else ""
-        imob_cnpj = imob_doc if len(imob_doc) == 14 else ""
 
         for imovel in root.findall(".//Imovel"):
             codigo_orig = _txt(imovel, "CodigoImovel")
@@ -511,10 +509,16 @@ class ArboMapper(BaseMapper):
 
             # Owner
             person = person_by_codigo_imovel.get(codigo_orig)
-            ow_cpf    = person.cpf    if person else imob_cpf
-            ow_cnpj   = person.cnpj   if person else imob_cnpj
-            ow_codigo = person.codigo if person else ""
-            ow_nome   = person.nome   if person else ""
+            if person:
+                ow_cpf    = person.cpf
+                ow_cnpj   = "" if person.cpf else person.cnpj
+                ow_codigo = person.codigo
+                ow_nome   = person.nome
+            else:
+                ow_cpf    = ""
+                ow_cnpj   = imob_doc
+                ow_codigo = ""
+                ow_nome   = ""
 
             prop_result.owners.append(PropertyOwnerRecord(
                 codigo_imovel=codigo,
