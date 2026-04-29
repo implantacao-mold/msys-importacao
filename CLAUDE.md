@@ -144,7 +144,7 @@ When the mapper has no owner data, fall back to `self.context.get("imob_cpf_cnpj
 | Code49 | XML | Sim |
 | Imobi Brasil | XML | Sim |
 | Imobzi | ZIP (JSONs) | Sim |
-| Kenlo | ZIP (XLSX) | Não |
+| Kenlo | ZIP (XLSX) | Sim |
 | Msys Imob | SQL / ZIP | Não |
 | Tec Imob | XLSX multi-aba | Sim |
 | Univen | ZIP (XMLs) | Não |

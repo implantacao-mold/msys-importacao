@@ -655,17 +655,21 @@ class Code49Mapper(BaseMapper):
 
             # ── Proprietário ──────────────────────────────────────────────────
             prop_cli_id = _txt(im, "PROPRIETARIO")
-            _, _, ow_nome = clientes_info.get(prop_cli_id, ("", "", imob_nome))
-            # Se há ID de proprietário: ID vai em codigo_pessoa, CPF fica vazio.
-            # Se não há (zero ou nulo): CNPJ da imobiliária vai no CPF, ID fica vazio.
+            ow_cpf_raw, ow_cnpj_raw, ow_nome = clientes_info.get(prop_cli_id, ("", "", imob_nome))
             has_owner = bool(prop_cli_id and prop_cli_id != "0")
-            owner_cpf = "" if has_owner else imob_doc
-            owner_id  = prop_cli_id if has_owner else ""
+            if has_owner:
+                owner_cpf  = ow_cpf_raw
+                owner_cnpj = "" if ow_cpf_raw else ow_cnpj_raw
+                owner_id   = prop_cli_id
+            else:
+                owner_cpf  = ""
+                owner_cnpj = imob_doc
+                owner_id   = ""
 
             prop_result.owners.append(PropertyOwnerRecord(
                 codigo_imovel=imovel_id,
                 cpf=owner_cpf,
-                cnpj="",
+                cnpj=owner_cnpj,
                 codigo_pessoa=owner_id,
                 percentual="100",
             ))
@@ -673,12 +677,12 @@ class Code49Mapper(BaseMapper):
             prop_result.owners_favored.append(PropertyOwnerFavoredRecord(
                 codigo_imovel=imovel_id,
                 cpf=owner_cpf,
-                cnpj="",
+                cnpj=owner_cnpj,
                 codigo_pessoa=owner_id,
                 tipo_pagamento="M",
                 percentual="100",
                 cpf_favorecido=owner_cpf,
-                cnpj_favorecido="",
+                cnpj_favorecido=owner_cnpj,
                 id_favorecido=owner_id,
                 favorecido=ow_nome,
                 banco="",

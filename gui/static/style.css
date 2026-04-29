@@ -790,11 +790,16 @@ select option { background: #151928; color: var(--text-pri); }
 
 .char-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: .85rem;
   margin-bottom: .9rem;
   overflow: visible;
 }
+
+.char-table th:first-child, .char-table td:first-child { width: 26%; }
+.char-table th:nth-child(2), .char-table td:nth-child(2) { width: 24%; }
+/* 3ª coluna (Mapeamento) ocupa os 50% restantes */
 
 .char-table th {
   text-align: left;
