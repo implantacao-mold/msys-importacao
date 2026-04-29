@@ -141,7 +141,7 @@ When the mapper has no owner data, fall back to `self.context.get("imob_cpf_cnpj
 | Nome | Formato | Exporta imóveis |
 |------|---------|----------------|
 | Arbo | XML | Sim |
-| Code49 | XML | Não |
+| Code49 | XML | Sim |
 | Imobi Brasil | XML | Sim |
 | Imobzi | ZIP (JSONs) | Sim |
 | Kenlo | ZIP (XLSX) | Não |
