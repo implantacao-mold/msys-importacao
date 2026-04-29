@@ -257,18 +257,18 @@ class Code49Mapper(BaseMapper):
             if prop_id:
                 imoveis_prop.add(prop_id)
 
-        # Emails e telefones por cliente
+        # Emails e telefones por cliente (registros em DESCRICAO dentro dos containers)
         emails_by_cli: dict[str, list[str]] = {}
-        for em in root.findall(".//EMAILCLIENTE/EMAIL") or root.findall(".//EMAILCLIENTE"):
-            cli_id = _txt(em, "IDCLIENTE") or _txt(em, "CLIENTE")
-            email  = _txt(em, "EMAIL")     or _txt(em, "ENDERECO")
+        for em in root.findall(".//EMAILCLIENTE/DESCRICAO"):
+            cli_id = _txt(em, "CLIENTE")
+            email  = _txt(em, "EMAIL")
             if cli_id and email:
                 emails_by_cli.setdefault(cli_id, []).append(email)
 
         fones_by_cli: dict[str, list[str]] = {}
-        for tel in root.findall(".//TELEFONECLIENTE/TELEFONE") or root.findall(".//TELEFONECLIENTE"):
-            cli_id = _txt(tel, "IDCLIENTE") or _txt(tel, "CLIENTE")
-            numero = _txt(tel, "NUMERO")    or _txt(tel, "TELEFONE")
+        for tel in root.findall(".//TELEFONECLIENTE/DESCRICAO"):
+            cli_id = _txt(tel, "CLIENTE")
+            numero = _txt(tel, "TELEFONE")
             if cli_id and numero:
                 fones_by_cli.setdefault(cli_id, []).append(numero)
 
@@ -307,28 +307,27 @@ class Code49Mapper(BaseMapper):
             p.observacao      = _txt(cli, "OBSERVACAO") or _txt(cli, "OBS")
             result.persons.append(p)
 
-            if tipo == "OW":
-                for raw in fones_by_cli.get(cli_id, []):
-                    cleaned = raw.replace("+", "").replace("55 ", "").replace(" ", "").strip()
-                    parsed = processar_telefone(cleaned)
-                    if parsed:
-                        result.phones.append(PhoneRecord(
-                            codigo_pessoa=cli_id,
-                            tipo_pessoa=tipo,
-                            ddi=parsed["ddi"],
-                            ddd=parsed["ddd"],
-                            telefone=parsed["numero"],
-                            tipo_telefone=parsed["tipo"],
-                        ))
+            for raw in fones_by_cli.get(cli_id, []):
+                cleaned = raw.replace("+", "").replace("55 ", "").replace(" ", "").strip()
+                parsed = processar_telefone(cleaned)
+                if parsed:
+                    result.phones.append(PhoneRecord(
+                        codigo_pessoa=cli_id,
+                        tipo_pessoa=tipo,
+                        ddi=parsed["ddi"],
+                        ddd=parsed["ddd"],
+                        telefone=parsed["numero"],
+                        tipo_telefone=parsed["tipo"],
+                    ))
 
-                for email in emails_by_cli.get(cli_id, []):
-                    if is_valid_email(email):
-                        result.emails.append(EmailRecord(
-                            codigo_pessoa=cli_id,
-                            tipo_pessoa=tipo,
-                            email=email,
-                            tipo_email="",
-                        ))
+            for email in emails_by_cli.get(cli_id, []):
+                if is_valid_email(email):
+                    result.emails.append(EmailRecord(
+                        codigo_pessoa=cli_id,
+                        tipo_pessoa=tipo,
+                        email=email,
+                        tipo_email="",
+                    ))
 
         result.property_result = self._extract_properties(
             root, cidades, bairros, categorias, tipos_internos,
@@ -587,7 +586,7 @@ class Code49Mapper(BaseMapper):
 
             # OBS = "Ref: {CODIGO}" / OBS_SITE = vazio (conforme SQL de migração)
             pr.observacao        = f"Ref: {_txt(im, 'CODIGO') or imovel_id}"
-            pr.obs_site          = ""
+            pr.obs_site          = _nfc(_txt(im, "CORPO"))
 
             pr.cep               = cep_raw
             pr.cidade            = _nfc(cidade_nome)
