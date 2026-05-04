@@ -3,6 +3,7 @@ from mappers.arbo import ArboMapper
 from mappers.code49 import Code49Mapper
 from mappers.imobzi import ImobziMapper
 from mappers.imobi_brasil import ImobiBrasilMapper
+from mappers.jetimob import JetImobMapper
 from mappers.kenlo import KenloMapper
 from mappers.msys_imob import MsysImobMapper
 from mappers.tec_imob import TecImobMapper
@@ -18,6 +19,7 @@ def build_engine() -> ExportEngine:
             Code49Mapper,
             ImobiBrasilMapper,
             ImobziMapper,
+            JetImobMapper,
             KenloMapper,
             MsysImobMapper,
             TecImobMapper,

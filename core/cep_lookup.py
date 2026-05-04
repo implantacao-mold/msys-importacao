@@ -4,6 +4,36 @@ import pathlib
 import re
 import threading
 
+# Mapeamento nome completo → sigla UF (case-insensitive via .upper())
+_ESTADO_NOME_PARA_UF: dict[str, str] = {
+    "ACRE": "AC", "ALAGOAS": "AL", "AMAPÁ": "AP", "AMAPA": "AP",
+    "AMAZONAS": "AM", "BAHIA": "BA", "CEARÁ": "CE", "CEARA": "CE",
+    "DISTRITO FEDERAL": "DF", "ESPÍRITO SANTO": "ES", "ESPIRITO SANTO": "ES",
+    "GOIÁS": "GO", "GOIAS": "GO", "MARANHÃO": "MA", "MARANHAO": "MA",
+    "MATO GROSSO DO SUL": "MS", "MATO GROSSO": "MT",
+    "MINAS GERAIS": "MG", "PARÁ": "PA", "PARA": "PA",
+    "PARAÍBA": "PB", "PARAIBA": "PB", "PARANÁ": "PR", "PARANA": "PR",
+    "PERNAMBUCO": "PE", "PIAUÍ": "PI", "PIAUI": "PI",
+    "RIO DE JANEIRO": "RJ", "RIO GRANDE DO NORTE": "RN",
+    "RIO GRANDE DO SUL": "RS", "RONDÔNIA": "RO", "RONDONIA": "RO",
+    "RORAIMA": "RR", "SANTA CATARINA": "SC", "SÃO PAULO": "SP", "SAO PAULO": "SP",
+    "SERGIPE": "SE", "TOCANTINS": "TO",
+}
+
+
+def normalize_estado_uf(estado: str) -> str:
+    """Converte nome completo de estado para sigla de 2 letras.
+
+    Se já for uma sigla de 2 letras, retorna em maiúsculas sem alteração.
+    Útil para mappers cujo sistema de origem armazena o nome por extenso.
+    """
+    if not estado:
+        return ""
+    s = estado.strip()
+    if len(s) == 2:
+        return s.upper()
+    return _ESTADO_NOME_PARA_UF.get(s.upper(), s)
+
 _CACHE_PATH = pathlib.Path(__file__).parent.parent / "data" / "cep_cache.json"
 _DB_CONFIG_PATH = pathlib.Path(__file__).parent.parent / "data" / "db_config.json"
 
@@ -91,12 +121,15 @@ def lookup_cep_by_city(cidade: str, estado: str) -> str | None:
     """Busca o CEP geral de uma cidade/UF (sufixo 000, sem endereço específico).
 
     Útil como fallback quando o imóvel não possui CEP no sistema de origem.
+    Aceita tanto siglas (MG) quanto nomes completos (Minas Gerais) — normaliza
+    automaticamente para sigla de 2 letras antes de consultar o banco.
     Retorna string de 8 dígitos ou None se não encontrado / falha de conexão.
     """
     if not cidade or not estado:
         return None
 
-    cache_key = f"city:{estado.strip().upper()}:{cidade.strip().upper()}"
+    uf = normalize_estado_uf(estado)
+    cache_key = f"city:{uf.upper()}:{cidade.strip().upper()}"
     with _lock:
         if cache_key in _cache:
             return _cache[cache_key]  # type: ignore[return-value]
@@ -111,7 +144,7 @@ def lookup_cep_by_city(cidade: str, estado: str) -> str | None:
                  AND num_postal_code LIKE %s
                ORDER BY num_postal_code ASC
                LIMIT 1""",
-            (cidade.strip(), estado.strip(), "%000"),
+            (cidade.strip(), uf, "%000"),
         )
         row = cur.fetchone()
         result: str | None = row["num_postal_code"] if row else None
@@ -162,7 +195,7 @@ def fix_record_cep(record) -> None:
     """
     cep    = re.sub(r"\D", "", str(getattr(record, "cep",    "") or ""))
     cidade = str(getattr(record, "cidade", "") or "")
-    estado = str(getattr(record, "estado", "") or "")
+    estado = normalize_estado_uf(str(getattr(record, "estado", "") or ""))
 
     if is_valid_cep(cep):
         cidade, estado = fill_city_state(cep, cidade, estado)
