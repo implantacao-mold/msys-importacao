@@ -91,7 +91,7 @@ def export_properties(result: PropertyExtractionResult, output_dir: str) -> None
         os.path.join(prop_dir, "PROPERTY_OWNER.csv"),
         PROPERTY_OWNER_COLUMNS,
         [
-            [o.codigo_imovel, _q(o.cpf or o.cnpj), o.codigo_pessoa, o.percentual]
+            [_q(o.codigo_imovel), _q(o.cpf or o.cnpj), o.codigo_pessoa, o.percentual]
             for o in owners
         ],
     )
@@ -101,7 +101,7 @@ def export_properties(result: PropertyExtractionResult, output_dir: str) -> None
         PROPERTY_OWNER_FAVORED_COLUMNS,
         [
             [
-                f.codigo_imovel,
+                _q(f.codigo_imovel),
                 _q(f.cpf or f.cnpj),
                 f.codigo_pessoa,
                 "A" if (f.banco or f.agencia or f.conta) else f.tipo_pagamento,
@@ -124,7 +124,7 @@ def export_properties(result: PropertyExtractionResult, output_dir: str) -> None
         os.path.join(prop_dir, "PROPERTY_CAPTIVATOR.csv"),
         PROPERTY_CAPTIVATOR_COLUMNS,
         [
-            [c.codigo_imovel, _q(c.cpf_cnpj), c.departamento, c.data_captacao]
+            [_q(c.codigo_imovel), _q(c.cpf_cnpj), c.departamento, c.data_captacao]
             for c in captivators
         ],
     )
@@ -134,7 +134,7 @@ def export_properties(result: PropertyExtractionResult, output_dir: str) -> None
         PROPERTY_IPTU_COLUMNS,
         [
             [
-                i.codigo_imovel,
+                _q(i.codigo_imovel),
                 i.tipo_iptu,
                 i.inscricao_iptu,
                 i.valor_mensal_iptu,

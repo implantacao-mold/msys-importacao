@@ -163,7 +163,7 @@ class PropertyRecord:
 
     def to_row(self) -> list[str]:
         return [
-            self.codigo, self.data_registro, self.imobiliaria, self.status,
+            (f"'{self.codigo}" if self.codigo else ""), self.data_registro, self.imobiliaria, self.status,
             self.tipo, self.sub_categoria, self.valor_venda, self.valor_locacao,
             self.desligar_energia, self.desligar_agua, self.ocupado, self.mostrar_site,
             self.destaque, self.locacao_exclusiva, self.venda_exclusiva,
